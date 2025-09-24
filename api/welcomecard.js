@@ -1,7 +1,7 @@
-import { ImageResponse } from "@vercel/og";
+import { ImageResponse } from "next/server";
 
 export const config = {
-  runtime: "edge", // Must use edge for @vercel/og
+  runtime: "edge",
 };
 
 export default async function handler(req) {
