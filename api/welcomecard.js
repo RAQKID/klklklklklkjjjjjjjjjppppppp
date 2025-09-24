@@ -1,10 +1,11 @@
+const chromium = require("chrome-aws-lambda");
 const express = require("express");
 const app = express();
 
-// API endpoint
-app.get("/api/welcomecard", (req, res) => {
+app.get("/api/welcomecard", async (req, res) => {
   const { background, text1, text2, text3, avatar } = req.query;
 
+  // Build HTML template
   const html = `
     <!DOCTYPE html>
     <html>
@@ -57,9 +58,28 @@ app.get("/api/welcomecard", (req, res) => {
     </html>
   `;
 
-  res.setHeader("Content-Type", "text/html");
-  res.send(html);
+  try {
+    // Launch Chromium in Vercel serverless
+    const browser = await chromium.puppeteer.launch({
+      args: chromium.args,
+      defaultViewport: { width: 800, height: 400 },
+      executablePath: await chromium.executablePath,
+      headless: true,
+    });
+
+    const page = await browser.newPage();
+    await page.setContent(html, { waitUntil: "networkidle0" });
+
+    const screenshot = await page.screenshot({ type: "png" });
+    await browser.close();
+
+    res.setHeader("Content-Type", "image/png");
+    res.send(screenshot);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Error generating image");
+  }
 });
 
-// Export for Vercel
 module.exports = app;
