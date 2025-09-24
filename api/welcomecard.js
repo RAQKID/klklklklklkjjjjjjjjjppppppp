@@ -1,52 +1,65 @@
-import express from "express";
-import { createCanvas, loadImage } from "canvas";
-
+const express = require("express");
 const app = express();
 
-app.get("/api/welcomecard", async (req, res) => {
-  try {
-    const { background, text1, text2, text3, avatar } = req.query;
+// API endpoint
+app.get("/api/welcomecard", (req, res) => {
+  const { background, text1, text2, text3, avatar } = req.query;
 
-    if (!background || !text1 || !text2 || !text3 || !avatar) {
-      return res.status(400).json({ error: "Missing query parameters" });
-    }
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <style>
+        body {
+          margin: 0;
+          padding: 0;
+          width: 800px;
+          height: 400px;
+          background: url('${background || "https://picsum.photos/800/400"}') no-repeat center center;
+          background-size: cover;
+          font-family: Arial, sans-serif;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          flex-direction: column;
+          color: white;
+          text-shadow: 2px 2px 4px rgba(0,0,0,0.6);
+        }
+        .avatar {
+          width: 120px;
+          height: 120px;
+          border-radius: 50%;
+          border: 4px solid white;
+          background: url('${avatar || "https://i.pravatar.cc/150"}') no-repeat center center;
+          background-size: cover;
+        }
+        h1 {
+          margin: 15px 0 5px 0;
+          font-size: 36px;
+        }
+        h2 {
+          margin: 0;
+          font-size: 24px;
+        }
+        p {
+          margin: 5px 0 0 0;
+          font-size: 20px;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="avatar"></div>
+      <h1>${text1 || "Guest"}</h1>
+      <h2>Welcome to ${text2 || "Our Server"}</h2>
+      <p>${text3 || "1"} members</p>
+    </body>
+    </html>
+  `;
 
-    // Canvas size
-    const width = 800;
-    const height = 300;
-    const canvas = createCanvas(width, height);
-    const ctx = canvas.getContext("2d");
-
-    // Background
-    const bgImg = await loadImage(background);
-    ctx.drawImage(bgImg, 0, 0, width, height);
-
-    // Avatar (circle crop)
-    const avatarImg = await loadImage(avatar);
-    const avatarSize = 180;
-    ctx.save();
-    ctx.beginPath();
-    ctx.arc(150, height / 2, avatarSize / 2, 0, Math.PI * 2, true);
-    ctx.closePath();
-    ctx.clip();
-    ctx.drawImage(avatarImg, 60, height / 2 - avatarSize / 2, avatarSize, avatarSize);
-    ctx.restore();
-
-    // Text styles
-    ctx.fillStyle = "#ffffff";
-    ctx.textAlign = "left";
-    ctx.font = "bold 36px Sans";
-
-    ctx.fillText(text1, 280, 120); // Username
-    ctx.font = "28px Sans";
-    ctx.fillText(text2, 280, 170); // Server name
-    ctx.fillText(`Member #${text3}`, 280, 220); // Member count
-
-    res.setHeader("Content-Type", "image/png");
-    res.send(canvas.toBuffer("image/png"));
-  } catch (err) {
-    res.status(500).json({ error: "Something went wrong", details: err.message });
-  }
+  res.setHeader("Content-Type", "text/html");
+  res.send(html);
 });
 
-export default app;
+// Export for Vercel
+module.exports = app;
