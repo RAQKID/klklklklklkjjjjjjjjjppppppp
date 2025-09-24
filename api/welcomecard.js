@@ -5,9 +5,8 @@ const puppeteer = require("puppeteer-core");
 const app = express();
 
 app.get("/api/welcomecard", async (req, res) => {
-  const { background, text1, text2, text3, avatar } = req.query;
+  const { background, text1, text2, text3, avatar, format } = req.query;
 
-  // HTML Template
   const html = `
     <!DOCTYPE html>
     <html>
@@ -64,21 +63,28 @@ app.get("/api/welcomecard", async (req, res) => {
     const browser = await puppeteer.launch({
       args: chromium.args,
       defaultViewport: { width: 800, height: 400 },
-      executablePath: await chromium.executablePath(),
+      executablePath:
+        (await chromium.executablePath()) || "/usr/bin/chromium-browser", // fallback
       headless: chromium.headless,
     });
 
     const page = await browser.newPage();
     await page.setContent(html, { waitUntil: "networkidle0" });
 
-    const screenshot = await page.screenshot({ type: "png" });
+    const screenshot = await page.screenshot({
+      type: format === "jpg" ? "jpeg" : "png",
+    });
+
     await browser.close();
 
-    res.setHeader("Content-Type", "image/png");
+    res.setHeader(
+      "Content-Type",
+      format === "jpg" ? "image/jpeg" : "image/png"
+    );
     res.send(screenshot);
   } catch (err) {
     console.error("Error generating welcome card:", err);
-    res.status(500).send("Error generating image");
+    res.status(500).json({ error: "Failed to generate welcome card" });
   }
 });
 
