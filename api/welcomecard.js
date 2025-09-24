@@ -1,11 +1,13 @@
-const chromium = require("chrome-aws-lambda");
 const express = require("express");
+const chromium = require("@sparticuz/chromium");
+const puppeteer = require("puppeteer-core");
+
 const app = express();
 
 app.get("/api/welcomecard", async (req, res) => {
   const { background, text1, text2, text3, avatar } = req.query;
 
-  // Build HTML template
+  // HTML Template
   const html = `
     <!DOCTYPE html>
     <html>
@@ -59,12 +61,11 @@ app.get("/api/welcomecard", async (req, res) => {
   `;
 
   try {
-    // Launch Chromium in Vercel serverless
-    const browser = await chromium.puppeteer.launch({
+    const browser = await puppeteer.launch({
       args: chromium.args,
       defaultViewport: { width: 800, height: 400 },
-      executablePath: await chromium.executablePath,
-      headless: true,
+      executablePath: await chromium.executablePath(),
+      headless: chromium.headless,
     });
 
     const page = await browser.newPage();
@@ -75,9 +76,8 @@ app.get("/api/welcomecard", async (req, res) => {
 
     res.setHeader("Content-Type", "image/png");
     res.send(screenshot);
-
   } catch (err) {
-    console.error(err);
+    console.error("Error generating welcome card:", err);
     res.status(500).send("Error generating image");
   }
 });
