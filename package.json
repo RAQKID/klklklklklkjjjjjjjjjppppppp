@@ -1,14 +1,8 @@
 {
   "name": "welcomecard-api",
   "version": "1.0.0",
-  "type": "module",
   "main": "api/welcomecard.js",
-  "scripts": {
-    "dev": "node api/welcomecard.js",
-    "start": "node api/welcomecard.js"
-  },
   "dependencies": {
-    "canvas": "^2.11.2",
-    "express": "^4.19.2"
+    "express": "^4.18.2"
   }
 }
